@@ -46,10 +46,10 @@ defmodule Soap.MixProject do
   defp deps do
     [
       {:sweet_xml, "~> 0.6"},
-      {:dialyxir, "~> 1.1.0", only: [:dev, :test], runtime: false},
+      {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
 
       # Http && XML
-      {:httpoison, "~> 1.0 or ~> 2.0"},
+      {:httpoison, "~> 1.0 or ~> 2.0 or ~> 3.0"},
       {:xml_builder, "~> 2.1"},
       {:credo, "~> 1.0", only: [:dev, :test]},
       {:ex_doc, ">= 0.0.0", only: [:dev, :docs], runtime: false},

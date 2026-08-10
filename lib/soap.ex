@@ -56,6 +56,10 @@ defmodule Soap do
 
   alias Soap.{Request, Response, Wsdl}
 
+  # SweetXml functions such as xpath/2 accept either the raw document or an
+  # already-parsed xmlElement, and Soap passes both.
+  @type xml :: String.t() | SweetXml.xmlElement()
+
   @doc """
   Initialization of a WSDL model. Response a map of parsed data from file.
   Returns `{:ok, wsdl}`.
