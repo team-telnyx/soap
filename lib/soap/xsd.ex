@@ -5,7 +5,7 @@ defmodule Soap.Xsd do
 
   import SweetXml, except: [parse: 1]
 
-  alias Soap.{Request, Type}
+  alias Soap.{Request, Response, Type}
 
   @spec parse(String.t(), keyword()) :: {:ok, map()} | {:error, atom()}
   def parse(path, opts \\ []) do
@@ -28,10 +28,10 @@ defmodule Soap.Xsd do
   def parse_from_url(path, opts \\ []) do
     request_opts = Keyword.merge([follow_redirect: true, max_redirect: 5], opts)
 
-    case Request.get_http_client().get(path, [], request_opts) do
-      {:ok, %HTTPoison.Response{status_code: 404}} -> {:error, :not_found}
-      {:ok, %HTTPoison.Response{body: body}} -> parse_xsd(body)
-      {:error, %HTTPoison.Error{reason: reason}} -> {:error, reason}
+    case Request.get(path, [], request_opts) do
+      {:ok, %Response{status_code: 404}} -> {:error, :not_found}
+      {:ok, %Response{body: body}} -> parse_xsd(body)
+      {:error, reason} -> {:error, reason}
     end
   end
 
