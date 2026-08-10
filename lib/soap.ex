@@ -1,6 +1,7 @@
 defmodule Soap do
   @moduledoc """
-  The SOAP client for Elixir based on `HTTPoison` (for send requests) and `SweetXml` (for XML parsing).
+  The SOAP client for Elixir. Requests go out over an HTTP client — `HTTPoison`
+  by default, swappable through `Soap.Request` — and `SweetXml` parses the XML.
 
   Soap contains 5 main modules:
 
@@ -10,8 +11,8 @@ defmodule Soap do
 
     * `Soap.Request` - Provides functionality for build and calling requests.
       Contains Request.Headers and Soap.Params submodules for build headers and
-      build body with parameters validation respectively.  This module is a
-      wrapper over HTTPoison. It send requests and handle them.
+      build body with parameters validation respectively. It owns the seam to
+      the HTTP client and answers `Soap.Response` whatever that client returns.
 
     * `Soap.Response` - Handle soap response and handle them. It provides
       functionality for parsing xml-like body and transform it to comfortable
@@ -72,7 +73,8 @@ defmodule Soap do
   - `endpoint`: Endpoint to be used for the request.  Defaults to the endpoint
     specified in the WSDL file.  Useful for (e.g.) sending a request to a mock
     server during testing.
-  - `opts`: any options for `HTTPoison.Request` and the following parsing options:
+  - `opts`: options for the configured HTTP client, plus the following parsing
+    options:
 
     * `:soap_version` - Specifies SOAP version for parsing.
     * `:allow_empty_soap_actions` - Allows SOAP operations with an empty
@@ -102,7 +104,9 @@ defmodule Soap do
   - `action`: Soap action to be called. Use `Soap.operations/1` to get a list of available actions
   - `params`: Parameters to build the body of a SOAP request.
   - `headers`: Custom request headers.
-  - `opts`: HTTPoison options.
+  - `opts`: options for the configured HTTP client. They are passed through
+    verbatim, so their names are that client's — `recv_timeout` against the
+    default HTTPoison, for instance, is a hackney option.
 
   ## Examples
 
@@ -110,12 +114,12 @@ defmodule Soap do
       {:ok, %Soap.Response{}}
 
   """
-  @spec call(wsdl :: map(), operation :: String.t(), params :: map(), headers :: any(), opts :: any()) :: any()
+  @spec call(wsdl :: map(), operation :: String.t(), params :: map(), headers :: any(), opts :: any()) ::
+          {:ok, Response.t()} | {:error, term()}
   def call(wsdl, operation, params, headers \\ [], opts \\ []) do
     wsdl
     |> validate_operation(operation)
     |> Request.call(operation, params, headers, opts)
-    |> handle_response
   end
 
   @doc """
@@ -135,16 +139,6 @@ defmodule Soap do
   @spec operations(map()) :: nonempty_list(String.t())
   def operations(wsdl) do
     wsdl.operations
-  end
-
-  defp handle_response(
-         {:ok, %HTTPoison.Response{body: body, headers: headers, request_url: request_url, status_code: status_code}}
-       ) do
-    {:ok, %Response{body: body, headers: headers, request_url: request_url, status_code: status_code}}
-  end
-
-  defp handle_response({:error, %HTTPoison.Error{reason: reason}}) do
-    {:error, reason}
   end
 
   defp validate_operation(wsdl, operation) do

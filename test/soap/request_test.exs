@@ -2,7 +2,15 @@ defmodule Soap.RequestTest do
   use ExUnit.Case
   import Mock
   doctest Soap.Request
-  alias Soap.{Request, Wsdl}
+  alias Soap.{Request, Response, Wsdl}
+
+  # A client that knows nothing about HTTPoison, which is the point of the seam.
+  defmodule OwnStructClient do
+    def post(_url, _body, _headers, _opts),
+      do: {:ok, %Response{status_code: 201, body: "own", headers: [], request_url: "http://x"}}
+
+    def get(_url, _headers, _opts), do: {:error, :nope}
+  end
 
   @request_with_header ~S"""
                        <?xml version="1.0" encoding="UTF-8"?>
@@ -29,7 +37,7 @@ defmodule Soap.RequestTest do
     http_poison_result = {:ok, %HTTPoison.Response{status_code: 200, body: "Anything"}}
 
     with_mock HTTPoison, post: fn _, _, _, _ -> http_poison_result end do
-      assert(Request.call(wsdl, operation, params) == http_poison_result)
+      assert {:ok, %Soap.Response{status_code: 200, body: "Anything"}} = Request.call(wsdl, operation, params)
     end
   end
 
@@ -41,7 +49,28 @@ defmodule Soap.RequestTest do
     hackney = [basic_auth: {"user", "pass"}]
 
     with_mock HTTPoison, post: fn _, _, _, [hackney: ^hackney] -> http_poison_result end do
-      assert(Request.call(wsdl, operation, params, [], hackney: hackney) == http_poison_result)
+      assert {:ok, %Soap.Response{status_code: 200, body: "Anything"}} =
+               Request.call(wsdl, operation, params, [], hackney: hackney)
+    end
+  end
+
+  describe "a client that answers Soap structs" do
+    setup do
+      # :globals also carries the SOAP version and namespaces, so it is merged.
+      globals = Application.fetch_env!(:soap, :globals)
+      Application.put_env(:soap, :globals, Keyword.put(globals, :http_client, OwnStructClient))
+      on_exit(fn -> Application.put_env(:soap, :globals, globals) end)
+    end
+
+    test "is passed through untouched" do
+      {_, wsdl} = Fixtures.get_file_path("wsdl/SendService.wsdl") |> Wsdl.parse_from_file()
+
+      assert {:ok, %Response{status_code: 201, body: "own"}} =
+               Request.call(wsdl, "SendMessage", %{inCommonParms: [{"userID", "WSPB"}]})
+    end
+
+    test "keeps its own error term" do
+      assert {:error, :nope} = Request.get("http://example.com")
     end
   end
 
