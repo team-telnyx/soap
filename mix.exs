@@ -1,7 +1,8 @@
 defmodule Soap.MixProject do
   use Mix.Project
 
-  @source_url "https://github.com/elixir-soap/soap"
+  @source_url "https://github.com/team-telnyx/soap"
+  @upstream_url "https://github.com/elixir-soap/soap"
   @version "1.1.1"
 
   def project do
@@ -31,8 +32,9 @@ defmodule Soap.MixProject do
       maintainers: ["Petr Stepchenko", "Roman Kakorin"],
       licenses: ["MIT"],
       links: %{
-        "Changelog" => "https://hexdocs.pm/soap/changelog.html",
-        "GitHub" => @source_url
+        "Changelog" => "#{@source_url}/blob/master/CHANGELOG.md",
+        "GitHub" => @source_url,
+        "Upstream" => @upstream_url
       }
     ]
   end
@@ -68,7 +70,7 @@ defmodule Soap.MixProject do
       ],
       main: "readme",
       source_url: @source_url,
-      source_ref: "v#{@version}",
+      source_ref: "master",
       formatters: ["html"]
     ]
   end
