@@ -92,6 +92,19 @@ defmodule Soap.RequestTest do
     end
   end
 
+  test "response headers arrive as {name, value} pairs" do
+    Req.Test.stub(Soap, fn conn ->
+      conn
+      |> Plug.Conn.put_resp_header("cache-control", "private, max-age=0")
+      |> Plug.Conn.send_resp(200, "x")
+    end)
+
+    {:ok, %Response{headers: headers, request_url: url}} = Request.get("http://example.com/calc")
+
+    assert {"cache-control", "private, max-age=0"} in headers
+    assert url == "http://example.com/calc"
+  end
+
   describe "get!/3" do
     test "answers the response itself" do
       Req.Test.stub(Soap, fn conn -> Plug.Conn.send_resp(conn, 200, "doc") end)
