@@ -180,6 +180,7 @@ are not specific to Telnyx's use are worth offering to
 ## Copyright and License
 
 Copyright (c) 2017 Petr Stepchenko
+
 Copyright (c) 2026 Telnyx LLC
 
 This work is free. You can redistribute it and/or modify it under the
