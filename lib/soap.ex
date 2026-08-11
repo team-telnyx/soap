@@ -88,7 +88,7 @@ defmodule Soap do
       {:ok, %{...}}
 
   """
-  @spec init_model(String.t(), :file | :url, list()) :: {:ok, map()}
+  @spec init_model(String.t(), :file | :url, list()) :: {:ok, map()} | {:error, term()}
   def init_model(path, type \\ :file, opts \\ [])
   def init_model(path, :file, opts), do: Wsdl.parse_from_file(path, opts)
   def init_model(path, :url, opts), do: Wsdl.parse_from_url(path, opts)
@@ -132,11 +132,11 @@ defmodule Soap do
   ## Examples
 
       iex> {:ok, wsdl} = Soap.init_model("https://git.io/vNCWd", :url)
-      iex> Soap.operations(wsdl)
+      iex> Soap.operations(wsdl) |> Enum.map(& &1.name)
       ["SendMessage", "SendMessageMultipleRecipients"]
 
   """
-  @spec operations(map()) :: nonempty_list(String.t())
+  @spec operations(map()) :: [map()]
   def operations(wsdl) do
     wsdl.operations
   end

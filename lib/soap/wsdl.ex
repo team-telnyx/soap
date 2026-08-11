@@ -11,15 +11,19 @@ defmodule Soap.Wsdl do
 
   alias Soap.{Request, Response, Type, Xsd}
 
-  @spec parse_from_file(String.t()) :: {:ok, map()}
+  @spec parse_from_file(String.t(), keyword()) :: {:ok, map()} | {:error, File.posix()}
   def parse_from_file(path, opts \\ []) do
-    {:ok, wsdl} = File.read(path)
-    parse(wsdl, path, opts)
+    # A missing file used to raise MatchError from inside the read. Xsd has
+    # always reported it, and the two read the same kind of path.
+    case File.read(path) do
+      {:ok, wsdl} -> parse(wsdl, path, opts)
+      {:error, reason} -> {:error, reason}
+    end
   end
 
-  @spec parse_from_url(String.t()) :: {:ok, map()}
+  @spec parse_from_url(String.t(), keyword()) :: {:ok, map()}
   def parse_from_url(path, opts \\ []) do
-    request_opts = Keyword.merge([follow_redirect: true, max_redirect: 5], opts)
+    request_opts = Keyword.merge([redirect: true, max_redirects: 5], opts)
     %Response{body: wsdl} = Request.get!(path, [], request_opts)
     parse(wsdl, path, opts)
   end

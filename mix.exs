@@ -49,12 +49,13 @@ defmodule Soap.MixProject do
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
 
       # Http && XML
-      {:httpoison, "~> 1.0 or ~> 2.0 or ~> 3.0"},
+      {:req, "~> 0.7"},
       {:xml_builder, "~> 2.1"},
       {:credo, "~> 1.0", only: [:dev, :test]},
       {:ex_doc, ">= 0.0.0", only: [:dev, :docs], runtime: false},
       {:excoveralls, "~> 0.10", only: :test},
-      {:mock, "~> 0.3.0", only: :test}
+      # Req.Test builds on Plug, which Req itself keeps optional.
+      {:plug, "~> 1.0", only: :test}
     ]
   end
 

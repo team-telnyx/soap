@@ -12,3 +12,15 @@ defmodule OperationError do
     %OperationError{message: msg}
   end
 end
+
+defmodule RequestError do
+  @moduledoc """
+  Defines an exception raised when a request Soap cannot carry on without fails.
+  """
+
+  defexception [:message, :reason]
+
+  def exception(reason) do
+    %RequestError{message: "the request failed: #{Exception.format_banner(:error, reason)}", reason: reason}
+  end
+end

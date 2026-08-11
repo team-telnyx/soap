@@ -25,12 +25,33 @@ defmodule Soap.ResponseTest do
   end
 
   test "#Soap.Response.parse/2, when response contains fault" do
-    parsed_fault = %{
+    fault_xml = Fixtures.load_xml("send_service/SendMessageFault.xml")
+
+    assert Response.parse(fault_xml, 500) == parsed_fault()
+  end
+
+  test "#Soap.Response.parse/1 from Soap.Response struct, when response contains fault" do
+    response = %Response{
+      body: Fixtures.load_xml("send_service/SendMessageFault.xml"),
+      headers: [],
+      request_url: "",
+      status_code: 500
+    }
+
+    assert Response.parse(response) == parsed_fault()
+  end
+
+  test "the fault parser is what a 4xx or 5xx reaches" do
+    fault_xml = Fixtures.load_xml("send_service/SendMessageFault.xml")
+
+    assert Parser.parse(fault_xml, :fault) == parsed_fault()
+    assert Response.parse(fault_xml, 400) == parsed_fault()
+  end
+
+  defp parsed_fault do
+    %{
       faultcode: "soap:Server",
       faultstring: "System.Web.Services.Protocols.SoapException: Server was unable to process request."
     }
-
-    fault_xml = Fixtures.load_xml("send_service/SendMessageFault.xml")
-    assert Parser.parse(fault_xml, :fault) == parsed_fault
   end
 end
