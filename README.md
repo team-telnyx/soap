@@ -1,14 +1,18 @@
 # Soap
 
-[![Build Status](https://travis-ci.org/elixir-soap/soap.svg?branch=master)](https://travis-ci.org/elixir-soap/soap)
-[![Code coverage](https://img.shields.io/coveralls/github/elixir-soap/soap.svg?style=flat)](https://coveralls.io/github/elixir-soap/soap)
-[![Module Version](https://img.shields.io/hexpm/v/soap.svg)](https://hex.pm/packages/soap)
-[![Hex Docs](https://img.shields.io/badge/hex-docs-lightgreen.svg)](https://hexdocs.pm/soap/)
-[![Total Download](https://img.shields.io/hexpm/dt/soap.svg)](https://hex.pm/packages/soap)
-[![License](https://img.shields.io/hexpm/l/soap.svg)](https://github.com/elixir-soap/soap/blob/master/LICENSE.md)
-[![Last Updated](https://img.shields.io/github/last-commit/elixir-soap/soap.svg)](https://github.com/elixir-soap/soap/commits/master)
+[![Quality](https://github.com/team-telnyx/soap/actions/workflows/quality.yml/badge.svg)](https://github.com/team-telnyx/soap/actions/workflows/quality.yml)
+[![Compatibility](https://github.com/team-telnyx/soap/actions/workflows/compatibility.yml/badge.svg)](https://github.com/team-telnyx/soap/actions/workflows/compatibility.yml)
+[![Elixir](https://img.shields.io/badge/elixir-%3E%3D%201.15-purple.svg)](https://elixir-lang.org)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE.md)
+[![Last Updated](https://img.shields.io/github/last-commit/team-telnyx/soap.svg)](https://github.com/team-telnyx/soap/commits/master)
 
 SOAP client for Elixir programming language.
+
+This is a fork of [elixir-soap/soap](https://github.com/elixir-soap/soap). It
+tracks release 1.1.1 with the specs corrected so dialyzer passes, the HTTP
+boundary answering `Soap.Response` rather than the client's own structs, and
+[Req](https://hex.pm/packages/req) underneath instead of HTTPoison. It is not
+published to Hex — depend on it by ref.
 
 ## Installation
 
@@ -17,7 +21,7 @@ Add `:soap` to your deps:
 ```elixir
 def deps do
   [
-    {:soap, "~> 1.0"}
+    {:soap, github: "team-telnyx/soap", ref: "..."}
   ]
 end
 ```
