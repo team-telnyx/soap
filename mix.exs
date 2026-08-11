@@ -16,6 +16,13 @@ defmodule Soap.MixProject do
       docs: docs(),
       package: package(),
       test_coverage: [tool: ExCoveralls],
+      # A directory of its own, so CI can cache the PLTs across runs: left to
+      # itself dialyxir writes them into _build, which CI throws away. Not
+      # priv/, which belongs to the application rather than to the build.
+      dialyzer: [
+        plt_local_path: ".plts",
+        plt_core_path: ".plts"
+      ],
       preferred_cli_env: [
         coveralls: :test,
         "coveralls.detail": :test,

@@ -54,14 +54,13 @@ jobs:
         uses: actions/cache@v4
         id: plt-cache
         with:
-          path: priv/plts
+          path: .plts
           key: ${{ runner.os }}-${{ env.OTP_VERSION }}-${{ env.ELIXIR_VERSION }}-plts-${{ hashFiles('mix.lock', 'mix.exs') }}
           restore-keys: ${{ runner.os }}-${{ env.OTP_VERSION }}-${{ env.ELIXIR_VERSION }}-plts-
 
       - name: Create PLT
         if: steps.plt-cache.outputs.cache-hit != 'true'
         run: |
-          mkdir -p priv/plts
           mix dialyzer --plt
 
       - name: Run dialyzer

@@ -25,6 +25,9 @@ soap-*.tar
 # Temporary files, for example, from tests.
 /tmp/
 
+# Dialyzer PLTs, cached between CI runs.
+/.plts/
+
 # Misc.
 /priv
 /.DS_Store
