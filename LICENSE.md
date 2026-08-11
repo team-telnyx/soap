@@ -1,6 +1,7 @@
 # The MIT License (MIT)
 
 Copyright (c) 2017 Petr Stepchenko
+
 Copyright (c) 2026 Telnyx LLC
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
