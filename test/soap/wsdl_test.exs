@@ -2,7 +2,6 @@ defmodule Soap.WsdlTest do
   use ExUnit.Case
   doctest Soap.Wsdl
   alias Soap.Wsdl
-  import Mock
 
   @wsdl Fixtures.load_wsdl("SendService.wsdl")
 
@@ -271,9 +270,9 @@ defmodule Soap.WsdlTest do
   end
 
   test "#parse_from_url returns {:ok, wsdl}" do
-    with_mock HTTPoison, get!: fn _, _, _ -> %HTTPoison.Response{body: @wsdl} end do
-      assert Wsdl.parse_from_url("any_url") == {:ok, @parsed_wsdl}
-    end
+    Req.Test.stub(Soap, fn conn -> Plug.Conn.send_resp(conn, 200, @wsdl) end)
+
+    assert Wsdl.parse_from_url("https://example.com/any") == {:ok, @parsed_wsdl}
   end
 
   test "#parse returns {:ok, wsdl}" do
@@ -319,10 +318,10 @@ defmodule Soap.WsdlTest do
       wsdl_path = Fixtures.get_file_path("wsdl/CyberSourceTransactionWithURLImportSchema.wsdl")
       xsd_path = "https://ics2wsa.ic3.com/commerce/1.x/transactionProcessor/CyberSourceTransaction_1.147.xsd"
 
-      with_mock HTTPoison, get: fn ^xsd_path, _, _ -> {:ok, %HTTPoison.Response{body: raw_xsd, status_code: 200}} end do
-        {:ok, parsed_wsdl} = Wsdl.parse_from_file(wsdl_path)
-        assert parsed_wsdl.validation_types == xsd_types
-      end
+      stub_by_path(%{URI.parse(xsd_path).path => raw_xsd})
+
+      {:ok, parsed_wsdl} = Wsdl.parse_from_file(wsdl_path)
+      assert parsed_wsdl.validation_types == xsd_types
     end
 
     test "#parse_from_file with WSDL containing file schema import", %{xsd_types: xsd_types} do
@@ -337,12 +336,10 @@ defmodule Soap.WsdlTest do
       xsd_path = "https://ics2wsa.ic3.com:443/commerce/1.x/transactionProcessor/example.xsd"
       raw_wsdl = Fixtures.load_wsdl("CyberSourceTransactionWithFileImportSchema.wsdl")
 
-      with_mock HTTPoison,
-        get!: fn ^wsdl_path, _, _ -> %HTTPoison.Response{body: raw_wsdl, status_code: 200} end,
-        get: fn ^xsd_path, _, _ -> {:ok, %HTTPoison.Response{body: raw_xsd, status_code: 200}} end do
-        {:ok, parsed_wsdl} = Wsdl.parse_from_url(wsdl_path)
-        assert parsed_wsdl.validation_types == xsd_types
-      end
+      stub_by_path(%{URI.parse(wsdl_path).path => raw_wsdl, URI.parse(xsd_path).path => raw_xsd})
+
+      {:ok, parsed_wsdl} = Wsdl.parse_from_url(wsdl_path)
+      assert parsed_wsdl.validation_types == xsd_types
     end
 
     test "#parse_from_url with WSDL containing URL schema import", %{xsd_types: xsd_types, raw_xsd: raw_xsd} do
@@ -350,13 +347,22 @@ defmodule Soap.WsdlTest do
       xsd_path = "https://ics2wsa.ic3.com/commerce/1.x/transactionProcessor/CyberSourceTransaction_1.147.xsd"
       raw_wsdl = Fixtures.load_wsdl("CyberSourceTransactionWithURLImportSchema.wsdl")
 
-      with_mock HTTPoison,
-        get!: fn ^wsdl_path, _, _ -> %HTTPoison.Response{body: raw_wsdl, status_code: 200} end,
-        get: fn ^xsd_path, _, _ -> {:ok, %HTTPoison.Response{body: raw_xsd, status_code: 200}} end do
-        {:ok, parsed_wsdl} = Wsdl.parse_from_url(wsdl_path)
-        assert parsed_wsdl.validation_types == xsd_types
-      end
+      stub_by_path(%{URI.parse(wsdl_path).path => raw_wsdl, URI.parse(xsd_path).path => raw_xsd})
+
+      {:ok, parsed_wsdl} = Wsdl.parse_from_url(wsdl_path)
+      assert parsed_wsdl.validation_types == xsd_types
     end
+  end
+
+  # These fixtures pull a WSDL and the XSD it imports from different paths on
+  # the same host, so the stub answers by path.
+  defp stub_by_path(bodies) do
+    Req.Test.stub(Soap, fn conn ->
+      case Map.fetch(bodies, conn.request_path) do
+        {:ok, body} -> Plug.Conn.send_resp(conn, 200, body)
+        :error -> Plug.Conn.send_resp(conn, 404, "")
+      end
+    end)
   end
 
   test "#parse WSDl without schema attributes" do

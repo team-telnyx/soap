@@ -28,6 +28,4 @@ import Config
 # here (which is why it is important to import them last).
 #
 #     import_config "#{Mix.env}.exs"
-config :soap, :globals,
-  version: "1.1",
-  http_client: HTTPoison
+config :soap, :globals, version: "1.1"

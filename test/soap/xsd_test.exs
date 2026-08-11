@@ -2,7 +2,6 @@ defmodule Soap.XsdTest do
   use ExUnit.Case
   doctest Soap.Xsd
   alias Soap.Xsd
-  import Mock
 
   @xsd_path Fixtures.get_file_path("xsd/example.xsd")
   @raw_xsd Fixtures.load_xsd("example.xsd")
@@ -27,21 +26,25 @@ defmodule Soap.XsdTest do
     assert Xsd.parse(@xsd_path) == {:ok, @parsed_xsd}
   end
 
+  test "when the file does not exist" do
+    assert Xsd.parse("does/not/exist.xsd") == {:error, :enoent}
+  end
+
   test "when file available on external resource" do
-    with_mock HTTPoison, get: fn _, _, _ -> {:ok, %HTTPoison.Response{body: @raw_xsd, status_code: 200}} end do
-      assert Xsd.parse("https://example.com") == {:ok, @parsed_xsd}
-    end
+    Req.Test.stub(Soap, fn conn -> Plug.Conn.send_resp(conn, 200, @raw_xsd) end)
+
+    assert Xsd.parse("https://example.com") == {:ok, @parsed_xsd}
   end
 
   test "when file not found on external resource" do
-    with_mock HTTPoison, get: fn _, _, _ -> {:ok, %HTTPoison.Response{body: "", status_code: 404}} end do
-      assert Xsd.parse("https://example.com") == {:error, :not_found}
-    end
+    Req.Test.stub(Soap, fn conn -> Plug.Conn.send_resp(conn, 404, "") end)
+
+    assert Xsd.parse("https://example.com") == {:error, :not_found}
   end
 
   test "when response is error on external resource" do
-    with_mock HTTPoison, get: fn _, _, _ -> {:error, %HTTPoison.Error{reason: :forbidden}} end do
-      assert Xsd.parse("https://example.com") == {:error, :forbidden}
-    end
+    Req.Test.stub(Soap, fn conn -> Req.Test.transport_error(conn, :econnrefused) end)
+
+    assert {:error, %Req.TransportError{reason: :econnrefused}} = Xsd.parse("https://example.com")
   end
 end
